@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
 import 'package:rimiosite/view/home.dart';
+import 'package:rimiosite/view/perfil.dart';
 
 class RootScreen extends StatefulWidget {
   const RootScreen({super.key});
@@ -19,7 +20,8 @@ class _RootScreenState extends State<RootScreen> {
   void initState() {
     super.initState();
     screens = const [
-      Home()
+      Home(),
+      Perfil()
     ];
     controller = PageController(initialPage: currentScreen);
   }
