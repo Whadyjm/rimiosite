@@ -45,6 +45,7 @@ dependencies:
   animate_do: ^3.3.4
   action_slider: ^0.7.0
   card_swiper: ^3.0.1
+  hovering: ^1.0.4
 
 dev_dependencies:
   flutter_test:

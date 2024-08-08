@@ -2,7 +2,9 @@ import 'package:card_swiper/card_swiper.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:rimiosite/models/categoria_model.dart';
 import 'package:rimiosite/providers/product_provider.dart';
+import 'package:rimiosite/widgets/categoryWidget.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -12,6 +14,26 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+
+  List<CategoriaModel> categoriaLista = [
+    CategoriaModel(id: 'Guitarras', name: 'Guitarras', image: 'assets/guitarra.png'),
+    CategoriaModel(id: 'Bajos', name: 'Bajos', image: 'assets/bass.png'),
+    CategoriaModel(id: 'Amps', name: 'Amps', image: 'assets/amp.png'),
+    CategoriaModel(id: 'Baterias', name: 'Baterias', image: 'assets/bateria.png'),
+    CategoriaModel(id: 'Teclados', name: 'Teclados', image: 'assets/teclado.png'),
+    CategoriaModel(id: 'Folklore', name: 'Folklore', image: 'assets/tradicional.png'),
+    CategoriaModel(id: 'Orquesta', name: 'Orquesta', image: 'assets/orquesta.png'),
+    CategoriaModel(id: 'Dj', name: 'Dj', image: 'assets/dj.png'),
+    CategoriaModel(id: 'Microfonos', name: 'Micrófonos', image: 'assets/microphone.png'),
+    CategoriaModel(id: 'Aire', name: 'Aire', image: 'assets/aire.png'),
+    CategoriaModel(id: 'Estudio', name: 'Estudio', image: 'assets/estudio.png'),
+    CategoriaModel(id: 'Merch', name: 'Merch', image: 'assets/camisa.png'),
+    CategoriaModel(id: 'Iluminacion', name: 'Iluminación', image: 'assets/spotlight.png'),
+    CategoriaModel(id: 'Pedales', name: 'Pedales', image: 'assets/guitar-pedal.png'),
+    CategoriaModel(id: 'Servicios', name: 'Servicios', image: 'assets/servicio.png'),
+    CategoriaModel(id: 'Accesorios', name: 'Accesorios', image: 'assets/pick.png'),
+    CategoriaModel(id: 'Repuestos', name: 'Repuestos', image: 'assets/metal.png'),
+  ];
 
   List<String> bannerImages = [];
 
@@ -83,52 +105,75 @@ class _HomeState extends State<Home> {
           ),*/
         ],
       ),
-      body: StreamBuilder(
-        stream: productProvider.fetchProductsStream(),
-        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            return const MaterialApp(
-              debugShowCheckedModeBanner: false,
-              home: Center(
+      body: Column(
+        children: [
+          StreamBuilder(
+          stream: productProvider.fetchProductsStream(),
+          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              return  const Center(
                 child: CircularProgressIndicator(),
+              );
+            } else if (snapshot.hasError) {
+              return Center(
+                child: SelectableText(snapshot.error.toString()),
+              );
+            } else if (snapshot.data == null) {
+              return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: CircularProgressIndicator(color: Colors.deepPurple,),
+                  )
+              );
+            }
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: SizedBox(
+                height: 300,
+                width: MediaQuery.of(context).size.width,
+                child: Swiper(
+                  containerWidth: MediaQuery.of(context).size.width,
+                  autoplay: true,
+                  autoplayDelay: 5000,
+                  duration: 2000,
+                  curve: Curves.ease,
+                  itemBuilder: (BuildContext context,int index){
+                    return ClipRRect(
+                        borderRadius: BorderRadius.circular(21),
+                        child: Image.network(fit: BoxFit.fill, bannerImages[index]));
+                  },
+                  itemCount: bannerImages.length,
+                  // pagination: const SwiperPagination(
+                  //     builder: SwiperPagination.dots
+                  // ),
+                ),
               ),
             );
-          } else if (snapshot.hasError) {
-            return Center(
-              child: SelectableText(snapshot.error.toString()),
-            );
-          } else if (snapshot.data == null) {
-            return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: CircularProgressIndicator(color: Colors.deepPurple,),
-                )
-            );
-          }
-          return Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: SizedBox(
-              height: 300,
-              width: MediaQuery.of(context).size.width,
-              child: Swiper(
-                containerWidth: MediaQuery.of(context).size.width,
-                autoplay: true,
-                autoplayDelay: 5000,
-                duration: 2000,
-                curve: Curves.ease,
-                itemBuilder: (BuildContext context,int index){
-                  return ClipRRect(
-                      borderRadius: BorderRadius.circular(21),
-                      child: Image.network(fit: BoxFit.fill, bannerImages[index]));
-                },
-                itemCount: bannerImages.length,
-                // pagination: const SwiperPagination(
-                //     builder: SwiperPagination.dots
-                // ),
-              ),
+          },
+        ),
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Text('Categorías', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),),
+              ],
             ),
-          );
-        },
+          ),
+          const SizedBox(height: 8,),
+          SizedBox(
+            height: 200,
+            child: ListView(
+                scrollDirection: Axis.horizontal,
+                shrinkWrap: true,
+                children: List.generate(categoriaLista.length, (index) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                    child: CategoryWidget(image: categoriaLista[index].image, categoria: categoriaLista[index].name),
+                  );
+                })),
+          ),
+        ],
       ),
     );
   }
