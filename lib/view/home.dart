@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rimiosite/models/categoria_model.dart';
 import 'package:rimiosite/providers/product_provider.dart';
+import 'package:rimiosite/providers/vistoReciente_provider.dart';
 import 'package:rimiosite/widgets/categoryWidget.dart';
+import 'package:rimiosite/widgets/itemTile.dart';
+import 'package:rimiosite/widgets/productWidget.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -66,6 +69,7 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
 
     final productProvider = Provider.of<ProductsProvider>(context);
+    final vistoProvider = Provider.of<VistoRecienteProvider>(context);
 
     for (var url in bannerImages) {
       precacheImage(NetworkImage(url),context);
@@ -105,75 +109,149 @@ class _HomeState extends State<Home> {
           ),*/
         ],
       ),
-      body: Column(
-        children: [
-          StreamBuilder(
-          stream: productProvider.fetchProductsStream(),
-          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              return  const Center(
-                child: CircularProgressIndicator(),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            StreamBuilder(
+            stream: productProvider.fetchProductsStream(),
+            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                return  const Center(
+                  child: CircularProgressIndicator(),
+                );
+              } else if (snapshot.hasError) {
+                return Center(
+                  child: SelectableText(snapshot.error.toString()),
+                );
+              } else if (snapshot.data == null) {
+                return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: CircularProgressIndicator(color: Colors.deepPurple,),
+                    )
+                );
+              }
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: SizedBox(
+                  height: 300,
+                  width: MediaQuery.of(context).size.width,
+                  child: Swiper(
+                    containerWidth: MediaQuery.of(context).size.width,
+                    autoplay: true,
+                    autoplayDelay: 5000,
+                    duration: 2000,
+                    curve: Curves.ease,
+                    itemBuilder: (BuildContext context,int index){
+                      return ClipRRect(
+                          borderRadius: BorderRadius.circular(21),
+                          child: Image.network(fit: BoxFit.fill, bannerImages[index]));
+                    },
+                    itemCount: bannerImages.length,
+                    // pagination: const SwiperPagination(
+                    //     builder: SwiperPagination.dots
+                    // ),
+                  ),
+                ),
               );
-            } else if (snapshot.hasError) {
-              return Center(
-                child: SelectableText(snapshot.error.toString()),
-              );
-            } else if (snapshot.data == null) {
-              return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: CircularProgressIndicator(color: Colors.deepPurple,),
-                  )
-              );
-            }
-            return Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: SizedBox(
-                height: 300,
-                width: MediaQuery.of(context).size.width,
-                child: Swiper(
-                  containerWidth: MediaQuery.of(context).size.width,
-                  autoplay: true,
-                  autoplayDelay: 5000,
-                  duration: 2000,
-                  curve: Curves.ease,
-                  itemBuilder: (BuildContext context,int index){
-                    return ClipRRect(
-                        borderRadius: BorderRadius.circular(21),
-                        child: Image.network(fit: BoxFit.fill, bannerImages[index]));
-                  },
-                  itemCount: bannerImages.length,
-                  // pagination: const SwiperPagination(
-                  //     builder: SwiperPagination.dots
-                  // ),
+            },
+          ),
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Text('Categorías', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8,),
+            SizedBox(
+              height: 100,
+              child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  shrinkWrap: true,
+                  children: List.generate(categoriaLista.length, (index) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                      child: CategoryWidget(image: categoriaLista[index].image, categoria: categoriaLista[index].name),
+                    );
+                  })),
+            ),
+            Visibility(
+              visible: vistoProvider.getVisto.isNotEmpty,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 4.0, left: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Visibility(
+                        visible: productProvider.getProducts.isNotEmpty,
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8.0),
+                          child: Text('Vistos recientemente', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),),
+                        )),
+                  ],
                 ),
               ),
-            );
-          },
-        ),
-          const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Text('Categorías', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),),
-              ],
             ),
-          ),
-          const SizedBox(height: 8,),
-          SizedBox(
-            height: 200,
-            child: ListView(
-                scrollDirection: Axis.horizontal,
-                shrinkWrap: true,
-                children: List.generate(categoriaLista.length, (index) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                    child: CategoryWidget(image: categoriaLista[index].image, categoria: categoriaLista[index].name),
-                  );
-                })),
-          ),
-        ],
+            Visibility(
+              visible: vistoProvider.getVisto.isNotEmpty,
+              child: SizedBox(
+                height: 310,
+                width: double.maxFinite,
+                child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: vistoProvider.getVisto.length < 10
+                        ? vistoProvider.getVisto.length
+                        : 10,
+                    itemBuilder: (context, index){
+                      return Padding(
+                        padding: const EdgeInsets.all(5.0),
+                        child: ProductWidget(productId: vistoProvider.getVisto.values.toList()[index].productId,),
+                      );
+                    }),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0, left: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Visibility(
+                      visible: productProvider.getProducts.isNotEmpty,
+                      child: const Text('Publicaciones recientes', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),)),
+                  GestureDetector(
+                      onTap: (){},
+                      child: TextButton(
+                        onPressed: () {
+                          // Navigator.pushNamed(context, SearchPage.routeName);
+                        },
+                        child: Visibility(
+                            visible: productProvider.getProducts.isNotEmpty,
+                            child: const Text('Ver más', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.purple),)),)),
+                ],
+              ),
+            ),
+            Visibility(
+              visible: productProvider.getProducts.isNotEmpty,
+              child: SizedBox(
+                height: 310,
+                width: double.maxFinite,
+                child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: productProvider.getProducts.length < 10
+                        ? productProvider.getProducts.length
+                        : 10,
+                    itemBuilder: (context, index){
+                      return ChangeNotifierProvider.value(
+                          value: productProvider.getProducts[index],
+                          child: itemTile());
+                    }),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

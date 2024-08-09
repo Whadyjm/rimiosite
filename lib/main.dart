@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rimiosite/appConst.dart';
 import 'package:rimiosite/firebase_options.dart';
+import 'package:rimiosite/providers/favoritos_provider.dart';
 import 'package:rimiosite/providers/product_provider.dart';
 import 'package:rimiosite/providers/user_provider.dart';
+import 'package:rimiosite/providers/vistoReciente_provider.dart';
 import 'package:rimiosite/rootScreen.dart';
 import 'package:rimiosite/view/aviso.dart';
 import 'package:rimiosite/view/webView.dart';
@@ -36,6 +38,12 @@ class MyApp extends StatelessWidget {
             ChangeNotifierProvider(create: (_){
               return ProductsProvider();
             }),
+            ChangeNotifierProvider(create: (_){
+              return VistoRecienteProvider();
+            }),
+            ChangeNotifierProvider(create: (_){
+              return FavoritosProvider();
+            }),
           ],
           child: MaterialApp(
             debugShowCheckedModeBanner: false,
@@ -43,9 +51,10 @@ class MyApp extends StatelessWidget {
               colorScheme: ColorScheme.fromSeed(seedColor: AppConst.themeColor),
               useMaterial3: true,
             ),
-            home: screenSize
-                ? const WebView()
-                : const RootScreen(),
+            home: const Aviso(),
+            // screenSize
+            //     ? const WebView()
+            //     : const RootScreen(),
           ),
         );
       },
