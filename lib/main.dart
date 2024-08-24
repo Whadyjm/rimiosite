@@ -51,10 +51,9 @@ class MyApp extends StatelessWidget {
               colorScheme: ColorScheme.fromSeed(seedColor: AppConst.themeColor),
               useMaterial3: true,
             ),
-            home: const Aviso(),
-            // screenSize
-            //     ? const WebView()
-            //     : const RootScreen(),
+            home: screenSize
+                ? const WebView()
+                : const RootScreen(),
           ),
         );
       },

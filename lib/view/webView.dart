@@ -69,7 +69,11 @@ class _WebViewState extends State<WebView> {
     } catch (e) {}
   }
   /// /// /// /// ///
+  ///
 
+  final ScrollController _scrollController = ScrollController();
+  bool rightClicked = false;
+  bool leftClicked = true;
 
   @override
   Widget build(BuildContext context) {
@@ -77,15 +81,25 @@ class _WebViewState extends State<WebView> {
     final productProvider = Provider.of<ProductsProvider>(context);
     final vistoProvider = Provider.of<VistoRecienteProvider>(context);
 
-    final controller = ScrollController();
-
-    void scrollRight(){
-      controller.position.maxScrollExtent;
-      // controller.animateTo(start, duration: Duration(seconds: 1), curve: Curves.easeIn);
-    }
 
     for (var url in bannerImages) {
       precacheImage(NetworkImage(url),context);
+    }
+
+    void scrollLeft(){
+      _scrollController.animateTo(
+        _scrollController.position.minScrollExtent,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeIn,
+      );
+    }
+
+    void scrollRight(){
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeIn,
+      );
     }
 
     return Scaffold(
@@ -199,65 +213,86 @@ class _WebViewState extends State<WebView> {
             )
           ],
         ),
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: Colors.deepPurple,
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  StreamBuilder(
-                    stream: productProvider.fetchProductsStream(),
-                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                      if (snapshot.connectionState == ConnectionState.done) {
-                        return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                      } else if (snapshot.hasError) {
-                        return Center(
-                          child: SelectableText(snapshot.error.toString()),
-                        );
-                      } else if (snapshot.data == null) {
-                        return const Center(
-                            child: CircularProgressIndicator(color: Colors.deepPurple,)
-                        );
-                      }
-                      return Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: SizedBox(
-                          height: 450,
-                          width: 850,
-                          child: Swiper(
-                            control: const SwiperControl(
-                              size: 40,
-                              color: Colors.white38,
-                              iconNext: Icons.arrow_circle_right,
-                              iconPrevious: Icons.arrow_circle_left,
-                            ),
-                            containerWidth: MediaQuery.of(context).size.width,
-                            autoplay: true,
-                            autoplayDelay: 5000,
-                            duration: 2000,
-                            curve: Curves.ease,
-                            itemBuilder: (BuildContext context,int index){
-                              return ClipRRect(
-                                  borderRadius: BorderRadius.circular(21),
-                                  child: Image.network(fit: BoxFit.fill, bannerImages[index]));
-                            },
-                            itemCount: bannerImages.length,
-                            // pagination: const SwiperPagination(
-                            //     builder: SwiperPagination.dots
-                            // ),
-                          ),
-                        ),
-                      );
-                    },
+            Stack(
+              children: [
+                Container(
+                  width: MediaQuery.sizeOf(context).width,
+                  height: 500,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.deepPurple,
+                      Colors.deepPurpleAccent,
+                      Colors.white,
+                    ],
                   ),
-                ],
-              ),
+                  ),
+                ),
+                Center(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        StreamBuilder(
+                          stream: productProvider.fetchProductsStream(),
+                          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                            if (snapshot.connectionState == ConnectionState.done) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            } else if (snapshot.hasError) {
+                              return Center(
+                                child: SelectableText(snapshot.error.toString()),
+                              );
+                            } else if (snapshot.data == null) {
+                              return const Center(
+                                  child: CircularProgressIndicator(color: Colors.deepPurple,)
+                              );
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: SizedBox(
+                                height: 450,
+                                width: 850,
+                                child: Swiper(
+                                  control: const SwiperControl(
+                                    size: 40,
+                                    color: Colors.white38,
+                                    iconNext: Icons.arrow_circle_right,
+                                    iconPrevious: Icons.arrow_circle_left,
+                                  ),
+                                  containerWidth: MediaQuery.of(context).size.width,
+                                  autoplay: true,
+                                  autoplayDelay: 5000,
+                                  duration: 2000,
+                                  curve: Curves.ease,
+                                  itemBuilder: (BuildContext context,int index){
+                                    return ClipRRect(
+                                        borderRadius: BorderRadius.circular(21),
+                                        child: Image.network(fit: BoxFit.fill, bannerImages[index]));
+                                  },
+                                  itemCount: bannerImages.length,
+                                  // pagination: const SwiperPagination(
+                                  //     builder: SwiperPagination.dots
+                                  // ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
             Center(
               child: Container(
@@ -382,7 +417,7 @@ class _WebViewState extends State<WebView> {
                       child: Stack(
                         children: [
                           ListView.builder(
-                            controller: controller,
+                            controller: _scrollController,
                             scrollDirection: Axis.horizontal,
                             itemCount: productProvider.getProducts.length < 10
                                 ? productProvider.getProducts.length
@@ -392,12 +427,36 @@ class _WebViewState extends State<WebView> {
                                   value: productProvider.getProducts[index],
                                   child: itemTile());
                             }),
-                          Positioned(
-                              left: 1130,
-                              bottom: 170,
-                              child: IconButton.filledTonal(
-                                icon: const Icon(Icons.arrow_forward_ios, size: 40, color: Colors.deepPurpleAccent,),
-                                onPressed: scrollRight,))
+                          Visibility(
+                            visible: leftClicked ? false:true,
+                            child: Positioned(
+                                right: 1130,
+                                bottom: 170,
+                                child: IconButton.filledTonal(
+                                  icon: const Icon(Icons.arrow_back_ios, size: 40, color: Colors.deepPurpleAccent,),
+                                  onPressed: (){
+                                    scrollLeft();
+                                    setState(() {
+                                      leftClicked = true;
+                                      rightClicked = false;
+                                    });
+                                  },)),
+                          ),
+                          Visibility(
+                            visible: rightClicked ? false:true,
+                            child: Positioned(
+                                left: 1130,
+                                bottom: 170,
+                                child: IconButton.filledTonal(
+                                  icon: const Icon(Icons.arrow_forward_ios, size: 40, color: Colors.deepPurpleAccent,),
+                                  onPressed: (){
+                                    scrollRight();
+                                    setState(() {
+                                      leftClicked = false;
+                                      rightClicked = true;
+                                    });
+                                  },)),
+                          ),
                         ]
                       ),
                     ),
