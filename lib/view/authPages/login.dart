@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:rimiosite/rootScreen.dart';
 import 'package:rimiosite/view/authPages/registro.dart';
+import 'package:rimiosite/view/webView.dart';
 import 'package:rimiosite/widgets/customButton.dart';
 
 class Login extends StatefulWidget {
@@ -36,6 +37,9 @@ class _LoginState extends State<Login> {
 
   @override
   Widget build(BuildContext context) {
+
+    bool screenSize = MediaQuery.sizeOf(context).width > 600;
+
     return AlertDialog(
       content: Center(
         child: SizedBox(
@@ -140,7 +144,7 @@ class _LoginState extends State<Login> {
                                   password: passwordController.text.trim(),
                                 );
                                 Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context){
-                                  return const RootScreen();
+                                  return screenSize ? const WebView():const RootScreen();
                                 }), (route) => false);
                               } on FirebaseAuthException catch (e) {
                                 Navigator.pop(context);

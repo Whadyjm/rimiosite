@@ -1,10 +1,12 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:card_swiper/card_swiper.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:popover/popover.dart';
 import 'package:provider/provider.dart';
 import 'package:rimiosite/models/categoria_model.dart';
+import 'package:rimiosite/models/user_model.dart';
 import 'package:rimiosite/providers/product_provider.dart';
 import 'package:rimiosite/providers/vistoReciente_provider.dart';
 import 'package:rimiosite/view/authPages/login.dart';
@@ -13,6 +15,7 @@ import 'package:rimiosite/widgets/categoryWidget.dart';
 import 'package:rimiosite/widgets/itemTile.dart';
 import 'package:rimiosite/widgets/menuCategory.dart';
 import 'package:rimiosite/widgets/productWidget.dart';
+import 'package:rimiosite/widgets/showProfile.dart';
 
 class WebView extends StatefulWidget {
   const WebView({super.key});
@@ -74,6 +77,10 @@ class _WebViewState extends State<WebView> {
   final ScrollController _scrollController = ScrollController();
   bool rightClicked = false;
   bool leftClicked = true;
+
+  User? user = FirebaseAuth.instance.currentUser;
+  UserModel? userModel;
+  final auth = FirebaseAuth.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -150,20 +157,26 @@ class _WebViewState extends State<WebView> {
                       ),
                     ),
                     const SizedBox(width: 30,),
-                    TextButton(onPressed: (){
-                      showDialog(context: context, builder: (context){
-                        return FadeInUp(
-                          duration: const Duration(milliseconds: 500),
-                            child: const Registro());
-                      });
-                    }, child: const Text('Crea tu cuenta', style: TextStyle(color: Colors.white),)),
-                    TextButton(onPressed: (){
-                      showDialog(context: context, builder: (context){
-                        return FadeInUp(
+                    Visibility(
+                      visible: user != null ? false:true,
+                      child: TextButton(onPressed: (){
+                        showDialog(context: context, builder: (context){
+                          return FadeInUp(
                             duration: const Duration(milliseconds: 500),
-                            child: const Login());
-                      });
-                    }, child: const Text('Ingresa', style: TextStyle(color: Colors.white),)),
+                              child: const Registro());
+                        });
+                      }, child: const Text('Crea tu cuenta', style: TextStyle(color: Colors.white),)),
+                    ),
+                    Visibility(
+                      visible: user != null ? false:true,
+                      child: TextButton(onPressed: (){
+                        showDialog(context: context, builder: (context){
+                          return FadeInUp(
+                              duration: const Duration(milliseconds: 500),
+                              child: const Login());
+                        });
+                      }, child: const Text('Ingresa', style: TextStyle(color: Colors.white),)),
+                    ),
                     GestureDetector(
                         child: MaterialButton(onPressed: () {  },
                         child: Image.asset(height: 40,'assets/google-play.png'))),
@@ -204,10 +217,45 @@ class _WebViewState extends State<WebView> {
                               PopupMenuItem(child: MenuCategory(categoria: categoriaLista[15].name,)),
                               PopupMenuItem(child: MenuCategory(categoria: categoriaLista[16].name,)),
                             ];
-                          })
+                          }),
                     ],
                   ),
-                  const SizedBox(width: 900,),
+                  const SizedBox(width: 600,),
+                  Visibility(
+                    visible: user!=null ? true:false,
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundImage: NetworkImage('${user?.photoURL}')
+                        ),
+                        const SizedBox(width: 20,),
+                        Text('Bienvenido ${user?.displayName}', style: const TextStyle(color: Colors.white, fontSize: 18),),
+                        PopupMenuButton(
+                            icon: const Icon(Icons.arrow_drop_down),
+                            iconColor: Colors.white,
+                            tooltip: '',
+                            itemBuilder: (context){
+                              return [
+                                PopupMenuItem(
+                                    onTap: (){
+                                      showDialog(context: context, builder: (context){
+                                        return ShowProfile();
+                                      });
+                                    },
+                                    child: Text('Mi perfil')),
+                                PopupMenuItem(
+                                    onTap: (){
+                                      auth.signOut();
+                                      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context){
+                                        return WebView();
+                                      }), (route) => false);
+                                    },
+                                    child: Text('Salir')),
+                              ];
+                            }),
+                      ],
+                    ),
+                  )
                 ],
               ),
             )
